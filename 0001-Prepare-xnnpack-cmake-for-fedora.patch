@@ -1,0 +1,111 @@
+From 901f0a903b576e8a7288bb5ce59215616cf23a85 Mon Sep 17 00:00:00 2001
+From: Tom Rix <trix@redhat.com>
+Date: Thu, 28 Sep 2023 13:46:53 -0700
+Subject: [PATCH] Prepare xnnpack cmake for fedora
+
+Signed-off-by: Tom Rix <trix@redhat.com>
+---
+ CMakeLists.txt | 51 +++++---------------------------------------------
+ 1 file changed, 5 insertions(+), 46 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 95df99eae..7ff267cbe 100755
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -71,10 +71,12 @@ ELSE()
+ ENDIF()
+ 
+ # --- [ Processor-specific options
++IF(XNNPACK_TARGET_PROCESSOR MATCHES "^arm64")
+ OPTION(XNNPACK_ENABLE_ARM_FP16_SCALAR "Build XNNPACK with ARM FP16 (FP16 data processing) scalar micro-kernels" ON)
+ OPTION(XNNPACK_ENABLE_ARM_FP16_VECTOR "Build XNNPACK with ARM FP16 (FP16 data processing) vector micro-kernels" ON)
+ OPTION(XNNPACK_ENABLE_ARM_BF16 "Build XNNPACK with ARM BF16 (BFLOAT16) micro-kernels" ON)
+ OPTION(XNNPACK_ENABLE_ARM_DOTPROD "Build XNNPACK with ARM DotProd (integer dot product) micro-kernels" ON)
++ENDIF()
+ 
+ # ---[ CMake options
+ INCLUDE(GNUInstallDirs)
+@@ -513,6 +515,9 @@ IF(XNNPACK_BUILD_LIBRARY)
+   TARGET_LINK_LIBRARIES(subgraph PRIVATE allocator logging memory mutex operators operator-run)
+   TARGET_LINK_LIBRARIES(XNNPACK PRIVATE allocator cache hardware-config indirection jit logging memory microkernel-utils microparams-init mutex normalization operators operator-run operator-utils packing post-operation microkernels-prod subgraph)
+   SET_TARGET_PROPERTIES(XNNPACK PROPERTIES C_EXTENSIONS YES)
++  # YY.M.D of last upstream commit to main
++  SET_TARGET_PROPERTIES(XNNPACK PROPERTIES SOVERSION "0.0.221221")
++
+ ENDIF()
+ IF(NOT MSVC)
+   SET_PROPERTY(SOURCE ${ALL_MICROKERNEL_SRCS} APPEND_STRING PROPERTY COMPILE_FLAGS " -fno-math-errno ")
+@@ -786,26 +791,6 @@ IF(LIBM)
+   ENDIF()
+ ENDIF()
+ 
+-# ---[ Configure clog
+-IF(NOT TARGET clog)
+-  IF(NOT XNNPACK_USE_SYSTEM_LIBS)
+-    SET(CLOG_BUILD_TESTS OFF CACHE BOOL "")
+-    SET(CLOG_RUNTIME_TYPE "${CPUINFO_RUNTIME_TYPE}" CACHE STRING "")
+-    ADD_SUBDIRECTORY(
+-      "${CLOG_SOURCE_DIR}/deps/clog"
+-      "${CMAKE_BINARY_DIR}/clog")
+-    # We build static version of clog but a dynamic library may indirectly depend on it
+-    SET_PROPERTY(TARGET clog PROPERTY POSITION_INDEPENDENT_CODE ON)
+-  ELSE()
+-    ADD_LIBRARY(clog STATIC IMPORTED)
+-    FIND_LIBRARY(CLOG_LIBRARY clog)
+-    IF(NOT CLOG_LIBRARY)
+-      MESSAGE(FATAL_ERROR "Cannot find clog")
+-    ENDIF()
+-    SET_PROPERTY(TARGET clog PROPERTY IMPORTED_LOCATION "${CLOG_LIBRARY}")
+-  ENDIF()
+-ENDIF()
+-
+ # ---[ Configure cpuinfo
+ IF(NOT TARGET cpuinfo)
+   IF(NOT XNNPACK_USE_SYSTEM_LIBS)
+@@ -885,16 +870,8 @@ IF(NOT TARGET fxdiv)
+     IF(NOT FXDIV_HDR)
+       MESSAGE(FATAL_ERROR "Cannot find fxdiv")
+     ENDIF()
+-    ADD_LIBRARY(fxdiv STATIC "${FXDIV_HDR}")
+-    SET_PROPERTY(TARGET fxdiv PROPERTY LINKER_LANGUAGE C)
+   ENDIF()
+ ENDIF()
+-TARGET_LINK_LIBRARIES(microkernels-all PRIVATE fxdiv)
+-TARGET_LINK_LIBRARIES(microkernels-prod PRIVATE fxdiv)
+-TARGET_LINK_LIBRARIES(indirection PRIVATE fxdiv)
+-IF(XNNPACK_BUILD_LIBRARY)
+-  TARGET_LINK_LIBRARIES(XNNPACK PRIVATE fxdiv)
+-ENDIF()
+ 
+ # ---[ Configure FP16
+ IF(NOT TARGET fp16)
+@@ -909,26 +886,8 @@ IF(NOT TARGET fp16)
+     IF(NOT FP16_HDR)
+       MESSAGE(FATAL_ERROR "Cannot find fp16")
+     ENDIF()
+-    ADD_LIBRARY(fp16 STATIC "${FP16_HDR}")
+-    SET_PROPERTY(TARGET fp16 PROPERTY LINKER_LANGUAGE C)
+   ENDIF()
+ ENDIF()
+-TARGET_LINK_LIBRARIES(microkernels-all PRIVATE fp16)
+-TARGET_LINK_LIBRARIES(microkernels-prod PRIVATE fp16)
+-TARGET_LINK_LIBRARIES(microparams-init PRIVATE fp16)
+-TARGET_LINK_LIBRARIES(packing PRIVATE fp16)
+-TARGET_LINK_LIBRARIES(indirection PRIVATE fp16)
+-IF(XNNPACK_BUILD_LIBRARY)
+-  TARGET_LINK_LIBRARIES(subgraph PRIVATE fp16)
+-  TARGET_LINK_LIBRARIES(operators PRIVATE fp16)
+-  TARGET_LINK_LIBRARIES(operator-run PRIVATE fp16)
+-
+-  TARGET_LINK_LIBRARIES(XNNPACK PRIVATE fp16)
+-  INSTALL(TARGETS XNNPACK
+-      LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+-      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+-      PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+-ENDIF()
+ 
+ # ---[ XNNPACK unit tests
+ IF(XNNPACK_BUILD_TESTS)
+-- 
+2.41.0
+
