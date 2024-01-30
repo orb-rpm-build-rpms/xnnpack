@@ -1,15 +1,15 @@
-From 901f0a903b576e8a7288bb5ce59215616cf23a85 Mon Sep 17 00:00:00 2001
+From 09407b5055a4a78adb45deef9da972d6ddc5278e Mon Sep 17 00:00:00 2001
 From: Tom Rix <trix@redhat.com>
 Date: Thu, 28 Sep 2023 13:46:53 -0700
 Subject: [PATCH] Prepare xnnpack cmake for fedora
 
 Signed-off-by: Tom Rix <trix@redhat.com>
 ---
- CMakeLists.txt | 51 +++++---------------------------------------------
- 1 file changed, 5 insertions(+), 46 deletions(-)
+ CMakeLists.txt | 55 +++++++++-----------------------------------------
+ 1 file changed, 9 insertions(+), 46 deletions(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 95df99eae..7ff267cbe 100755
+index 95df99e..20b3429 100755
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -71,10 +71,12 @@ ELSE()
@@ -25,7 +25,18 @@ index 95df99eae..7ff267cbe 100755
  
  # ---[ CMake options
  INCLUDE(GNUInstallDirs)
-@@ -513,6 +515,9 @@ IF(XNNPACK_BUILD_LIBRARY)
+@@ -104,6 +106,10 @@ ENDIF()
+ IF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+   # Disable "note: parameter passing for argument of type ... changed/will change in ..."
+   ADD_COMPILE_OPTIONS("-Wno-psabi")
++  IF(XNNPACK_TARGET_PROCESSOR MATCHES "^arm64")
++    # stricter gcc 14 breaks arm build
++    ADD_COMPILE_OPTIONS(-Wno-incompatible-pointer-types)
++  ENDIF()
+ ENDIF()
+ 
+ # ---[ Build flags
+@@ -513,6 +519,9 @@ IF(XNNPACK_BUILD_LIBRARY)
    TARGET_LINK_LIBRARIES(subgraph PRIVATE allocator logging memory mutex operators operator-run)
    TARGET_LINK_LIBRARIES(XNNPACK PRIVATE allocator cache hardware-config indirection jit logging memory microkernel-utils microparams-init mutex normalization operators operator-run operator-utils packing post-operation microkernels-prod subgraph)
    SET_TARGET_PROPERTIES(XNNPACK PROPERTIES C_EXTENSIONS YES)
@@ -35,7 +46,7 @@ index 95df99eae..7ff267cbe 100755
  ENDIF()
  IF(NOT MSVC)
    SET_PROPERTY(SOURCE ${ALL_MICROKERNEL_SRCS} APPEND_STRING PROPERTY COMPILE_FLAGS " -fno-math-errno ")
-@@ -786,26 +791,6 @@ IF(LIBM)
+@@ -786,26 +795,6 @@ IF(LIBM)
    ENDIF()
  ENDIF()
  
@@ -62,7 +73,7 @@ index 95df99eae..7ff267cbe 100755
  # ---[ Configure cpuinfo
  IF(NOT TARGET cpuinfo)
    IF(NOT XNNPACK_USE_SYSTEM_LIBS)
-@@ -885,16 +870,8 @@ IF(NOT TARGET fxdiv)
+@@ -885,16 +874,8 @@ IF(NOT TARGET fxdiv)
      IF(NOT FXDIV_HDR)
        MESSAGE(FATAL_ERROR "Cannot find fxdiv")
      ENDIF()
@@ -79,7 +90,7 @@ index 95df99eae..7ff267cbe 100755
  
  # ---[ Configure FP16
  IF(NOT TARGET fp16)
-@@ -909,26 +886,8 @@ IF(NOT TARGET fp16)
+@@ -909,26 +890,8 @@ IF(NOT TARGET fp16)
      IF(NOT FP16_HDR)
        MESSAGE(FATAL_ERROR "Cannot find fp16")
      ENDIF()
@@ -107,5 +118,5 @@ index 95df99eae..7ff267cbe 100755
  # ---[ XNNPACK unit tests
  IF(XNNPACK_BUILD_TESTS)
 -- 
-2.41.0
+2.43.0
 
