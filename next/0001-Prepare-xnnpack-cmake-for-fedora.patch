@@ -1,0 +1,40 @@
+From c64915df538cb8e54d8739c99ccf89da11c98eb0 Mon Sep 17 00:00:00 2001
+From: Tom Rix <trix@redhat.com>
+Date: Sat, 3 Feb 2024 09:24:12 -0500
+Subject: [PATCH] Prepare xnnpack cmake for fedora
+
+---
+ CMakeLists.txt | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 877107f87..92dbabf1d 100755
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -75,12 +75,14 @@ ELSE()
+ ENDIF()
+ 
+ # --- [ Processor-specific options
++IF(XNNPACK_TARGET_PROCESSOR MATCHES "^arm64")
+ OPTION(XNNPACK_ENABLE_ARM_FP16_SCALAR "Build XNNPACK with ARM FP16 (FP16 data processing) scalar micro-kernels" ON)
+ OPTION(XNNPACK_ENABLE_ARM_FP16_VECTOR "Build XNNPACK with ARM FP16 (FP16 data processing) vector micro-kernels" ON)
+ OPTION(XNNPACK_ENABLE_ARM_BF16 "Build XNNPACK with ARM BF16 (BFLOAT16) micro-kernels" ON)
+ OPTION(XNNPACK_ENABLE_ARM_DOTPROD "Build XNNPACK with ARM DotProd (integer dot product) micro-kernels" ON)
+ OPTION(XNNPACK_ENABLE_ARM_I8MM "Build XNNPACK with ARM I8MM (8-bit integer matrix multiply accumulate) micro-kernels" ON)
+ OPTION(XNNPACK_ENABLE_RISCV_VECTOR "Build XNNPACK with RISC-V Vector micro-kernels" ON)
++ENDIF()
+ SET(XNNPACK_AVXVNNI_DEFAULT ON CACHE INTERNAL "Default value to enable AVX-VNNI in x86 builds.")
+ IF(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+   IF(CMAKE_C_COMPILER_VERSION VERSION_LESS "11")
+@@ -571,6 +573,8 @@ IF(XNNPACK_BUILD_LIBRARY)
+   TARGET_LINK_LIBRARIES(subgraph PRIVATE allocator logging memory mutex operators operator-run)
+   TARGET_LINK_LIBRARIES(XNNPACK PRIVATE allocator cache hardware-config indirection jit logging memory microkernel-utils microparams-init mutex normalization operators operator-run operator-utils packing post-operation microkernels-prod subgraph)
+   SET_TARGET_PROPERTIES(XNNPACK PROPERTIES C_EXTENSIONS YES)
++  # YY.M.D of last upstream commit to main
++  SET_TARGET_PROPERTIES(XNNPACK PROPERTIES SOVERSION "23.11.27")
+ ENDIF()
+ IF(NOT MSVC)
+   SET_PROPERTY(SOURCE ${ALL_MICROKERNEL_SRCS} APPEND_STRING PROPERTY COMPILE_FLAGS " -fno-math-errno ")
+-- 
+2.43.0
+
