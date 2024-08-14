@@ -2,6 +2,10 @@
 %bcond_with gitcommit
 
 %if %{with gitcommit}
+# Something recent to match change to cpuinfo
+%global commit0 312eb7e13554ce75d02c5cb27357555f1368f2d1
+%global date0 20240814
+
 %else
 # commit is what PyTorch 2.3 at its gitcommit expects
 %global commit0 fcbf55af6cf28a4627bcd1f703ab7ad843f0f3a2
@@ -27,6 +31,7 @@ Release:        %autorelease
 URL:            https://github.com/google/%{upstream_name}
 Source0:        %{url}/archive/%{commit0}/%{name}-%{shortcommit0}.tar.gz
 %if %{with gitcommit}
+Patch0:         0001-Fix-cmake-for-pthread-and-cpuinfo-with-USE_SYSTEM_LI.patch
 %else
 # https://github.com/google/XNNPACK/pull/6144
 Patch0:         0001-Fix-cmake-for-pthread-and-cpuinfo-with-USE_SYSTEM_LI.patch
@@ -62,6 +67,9 @@ Requires:       %{name}%{?_isa} = %{version}-%{release}
 %autosetup -p1 -n %{upstream_name}-%{commit0}
 
 %if %{with gitcommit}
+# version of the *.so
+echo "SET_TARGET_PROPERTIES(XNNPACK PROPERTIES SOVERSION \"24.08.14\")" >> CMakeLists.txt
+
 %else
 # On RHEL 9, gcc 11, there is this error
 # /tmp/ccnF75eP.s:120: Error: unsupported instruction `vpdpbusd'
@@ -89,6 +97,10 @@ mkdir -p %{buildroot}%{_includedir}
 install -p -m 644 include/xnnpack.h %{buildroot}%{_includedir}
 mkdir -p %{buildroot}%{_libdir}
 %if %{with gitcommit}
+strip libXNNPACK.so.24.08.14
+install -p -m 755 libXNNPACK.so.24.08.14 %{buildroot}%{_libdir}
+cd %{buildroot}%{_libdir}
+ln -s libXNNPACK.so.24.08.14 libXNNPACK.so
 %else
 strip libXNNPACK.so.24.02.29
 install -p -m 755 libXNNPACK.so.24.02.29 %{buildroot}%{_libdir}
