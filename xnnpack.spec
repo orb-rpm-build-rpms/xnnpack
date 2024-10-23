@@ -73,6 +73,7 @@ echo "SET_TARGET_PROPERTIES(XNNPACK PROPERTIES SOVERSION \"24.08.14\")" >> CMake
       -DXNNPACK_BUILD_BENCHMARKS=OFF \
       -DXNNPACK_BUILD_LIBRARY=ON \
       -DXNNPACK_BUILD_TESTS=OFF \
+      -DXNNPACK_ENABLE_KLEIDIAI=OFF \
       -DXNNPACK_USE_SYSTEM_LIBS=ON \
       -DXNNPACK_LIBRARY_TYPE=shared
 
@@ -101,20 +102,4 @@ ln -s libXNNPACK.so.24.08.14 libXNNPACK.so
 %{_libdir}/libXNNPACK.so
 
 %changelog
-* Tue Oct 22 2024 Tom Rix <Tom.Rix@amd.com> - 0.0^git20240814.312eb7e-1
-- Update to 24.08.14
-
-* Sun Mar 10 2024 Tom Rix <trix@redhat.com> - 0.0^git20240229.fcbf55a-1
-- Update
-
-* Tue Jan 30 2024 Tom Rix <trix@redhat.com> - 0.0^git20221221.51a9875-4
-- Fix arm build
-
-* Sat Jan 27 2024 Fedora Release Engineering <releng@fedoraproject.org> - 0.0^git20221221.51a9875-3
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_40_Mass_Rebuild
-
-* Tue Oct 10 2023 Tom Rix <trix@redhat.com> - 0.0^git20221221.51a9875-2
-- Address review comments
-
-* Thu Oct 5 2023 Tom Rix <trix@redhat.com> - 0.0^git20221221.51a9875-1
-- Initial package
+%autochangelog
